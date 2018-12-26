@@ -15,7 +15,7 @@ function M.run()
     if success then
         local destination = ngx.var.request_uri:sub(6) -- Ignore '/abs/'
         local bibcode = destination:sub(1, 19) -- Use only 19 characters
-        local target = "https://ui.adsabs.harvard.edu/#abs/" .. bibcode .. "/abstract"
+        local target = ngx.var.scheme .. "://" .. ngx.var.host .. "/#abs/" .. bibcode .. "/abstract"
         local result = pg:query("SELECT content FROM pages WHERE target = " ..  pg:escape_literal(target))
         if result and result[1] and result[1]['content'] then
             ngx.say(result[1]['content'])
