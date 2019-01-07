@@ -1,5 +1,5 @@
 # TurboBee
- 
+
 OpenResty caching layer
 
 Install turbobee and its dependencies into `/usr/local/openresty/luajit/lib/luarocks/rocks/`:
@@ -56,9 +56,21 @@ If it was installed in `dev.adsabs.harvard.edu`, try:
 
 
 ## Testing
+#### LuaUnit  
 
 ```
 resty -I turbobee/  tests/test.lua
+```
+
+#### Busted
+
+To run all _spec lua files in current and sub-directories:
+```
+busted -v .
+```
+else for specific files:
+```
+busted -v example_test_spec.lua
 ```
 
 ## Misc
@@ -68,5 +80,3 @@ How to reload nginx and all its lua modules:
 ```
 /usr/local/openresty/nginx/sbin/nginx -s reload
 ```
-
-
