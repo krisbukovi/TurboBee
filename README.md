@@ -73,7 +73,7 @@ else for specific files:
 busted -v example_test_spec.lua
 ```
 
-## Misc
+## Misc
 
 How to reload nginx and all its lua modules:
 
