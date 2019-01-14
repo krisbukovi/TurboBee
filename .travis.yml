@@ -10,11 +10,12 @@ install:
   - sudo apt-get install luarocks
   - sudo luarocks install luafilesystem
   - sudo luarocks install busted
+  - sudo luarocks install luacov
   - sudo luarocks install luacov-coveralls
 
 
 script:
- - "busted -v ."
+ - "busted -v -c ."
 
 after_success:
  - luacov-coveralls
