@@ -1,0 +1,21 @@
+language: lua
+
+sudo: required
+
+env:
+  - LUA="lua=5.1"
+
+install:
+  - apt-get install luajit
+  - apt-get install luarocks
+  - luarocks make
+  - luarocks install luafilesystem
+  - luarocks install busted
+
+
+script:
+ - "busted -v ."
+
+after_success:
+ - "coveralls"
+

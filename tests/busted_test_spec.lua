@@ -1,85 +1,151 @@
-local obj1 = require('abs')
+describe("unit test -", function()
+  
+    -- import functions from abs.lua file 
+    local abs = require('abs')
 
-describe('a simple test', function()
-    it('adds 1 + 1', function()
-        local result = obj1.add(1,1)
-        assert.is_true(result == 2)
-    end)
-end)
- 
-describe("openresty script", function()
-  it("should run in ngx_lua context", function()
-    assert.truthy(_G.ngx)
-    assert.equal(0, ngx.OK)
-    assert.equal(200, ngx.HTTP_OK)
-  end)
-  it("should wait", function()
-    ngx.sleep(3)
-    assert.is_true(1 == 1)
-  end)
-end)
-
-describe("mocks", function()
-  it("replaces a table with spies", function()
-    local t = {
-      thing = function(msg) ngx.say(msg) end
+    -- define ngx object 
+    ngx = {
+        say = function(s) print(s) end,
+        var = {
+            request_uri = "/abs/2018EPJWC.18608001A/abstract",
+	    QUERY_STRING = "?whoknows=True"
+        },
+	header = {
+	    content_type = "html"
+	},
+	redirect = function(s) end,
+	exit = function(s) end
+    }
+	
+    -- mock ngx object using busted function
+    -- store in global var
+    _G.ngx = mock(ngx, false)
+	
+    -- define pgmoon object 
+    pg = {
+        connect = function(self) return true, nil end,
+        query = function(self, s) return { { content = 'from mocked db!'  } } end,
+        escape_literal = function(self, s) return s end,
+        keepalive = function(self) end
     }
 
-    local m = mock(t) -- mocks the table with spies, so it will print
+    -- mock pgmoon object using busted function
+    -- store in global var
+    _G.pg = mock(pg, false)
 
-    m.thing("Coffee")
-    assert.spy(m.thing).was.called_with("Coffee")
-  end)
+      it('checks if bibcode is nil', function()
 
-  it("replaces a table with stubs", function()
-    local t = {
-      thing = function(msg) ngx.say(msg) end
-    }
+	  local b = abs.getBibcode()
 
-    local m = mock(t, true) -- mocks the table with stubs, so it will not print
+	  assert.is_true(b ~= nil and b ~= "" and b ~= " ")
 
-    m.thing("Coffee")
-    assert.stub(m.thing).was.called_with("Coffee")
-    mock.revert(m) -- reverts all stubs/spies in m
-    m.thing("Tea") -- DOES print 'Tea'
-  end)
-
-  it('pgmoon', function()
-      local thing = require('pgmoon')
-      spy.on(thing, 'new')
-      local thing2 = thing.new({
-      host = os.getenv("DATABASE_HOST"),
-      port = os.getenv("DATABASE_PORT"),
-      database = os.getenv("DATABASE_NAME"),
-      user = os.getenv("DATABASE_USER"),
-      password = os.getenv("DATABASE_PASSWORD")
-      })
-
-      local t = {
-        f1 = function() thing2:connect() end 
-      }
-
-      local m = mock(t)
-
-      m.f1()
-
-      assert.spy(m.f1).was.called()
-
-      --assert.spy(thing.new).was.called()
-
-      --spy.on(thing2, 'connect')
-      --thing2:connect(100,10)
-      --assert.spy(thing.new).was.called_with('Hi!')
-
-      --assert.spy(thing2.connect).was.called()
-      --assert.spy(thing2.connect).was.called_with(100,10)
       end)
 
-  it('spies on nginx', function()
-    spy.on(ngx, 'say')
-    ngx.say('Hi!')
+      it('checks that setting the bibcode from unit test works', function()
 
-    assert.spy(ngx.say).was.called()
-    -- assert.spy(thing.greet).was.called_with('Hi!')
-  end)
+	  -- store string bibcode var
+          local bibcode = "2018EPJWC.18608001A"
+
+	  -- set ngx global var to string val
+          ngx.var.request_uri = "/abs/" .. bibcode .. "/abstract"
+
+	  -- get bibcode using abs function
+	  local b = abs.getBibcode()
+
+	  -- check that they are the same
+          assert.is_true(b == bibcode)
+
+      end)
+
+      it('checks that pgmoon connect to db function was called', function()
+
+          -- store string bibcode var
+          local bibcode = "2018EPJWC.18608001A"
+
+          -- set ngx global var to string val
+          ngx.var.request_uri = "/abs/" .. bibcode .. "/abstract"
+
+          abs.run()
+
+          assert.spy(_G.pg.connect).was.called()
+
+	  -- clear call history
+          _G.ngx.say:clear()
+          _G.ngx.exit:clear()
+      
+      end)
+
+      it('checks if bibcode is correct length', function()
+
+	  -- get bibcode 
+          local b = abs.getBibcode()
+
+	  -- check length
+          assert(string.len(b) == 19)
+      
+      end)
+
+      it('checks the return value for url that is nil', function()
+
+          -- set request equal to null
+          ngx.var.request_uri = "/abs//abstract"
+
+	  -- call run function 
+          abs.run()
+
+	  -- check display 
+          assert.spy(_G.ngx.say).was.called_with("Bibcode should be 19 characters.")
+
+          -- check that it exits
+	  assert.spy(_G.ngx.exit).was.called()
+
+	  -- check exit code 
+          assert.spy(_G.ngx.exit).was.called_with(404)
+
+	  -- clear call history
+	  _G.ngx.say:clear()
+	  _G.ngx.exit:clear()
+
+
+      end)
+
+      it('checks the return value for url with a bibcode that is too long', function()
+          
+          -- set request to a value with a bibcode that is too long
+	  ngx.var.request_uri = "/abs/2018EPJWC.18608001AB/abstract"
+
+	  -- call run function
+	  abs.run()
+
+          -- checks display
+	  assert.spy(_G.ngx.say).was.called_with("Bibcode should be 19 characters.")
+ 
+	  -- check that it exits
+	  assert.spy(_G.ngx.exit).was.called()
+
+	  -- checks exit code
+	  assert.spy(_G.ngx.exit).was.called_with(404)
+
+	  -- clear call history
+	  _G.ngx.say:clear()
+	  _G.ngx.exit:clear()
+	  _G.pg.query:clear()
+      end)
+      it('checks the return value for url with a 19 character bibcode', function()
+
+	  -- set request to a value with a bibcode that is too long
+          ngx.var.request_uri = "/abs/2018EPJWC.18608001A/abstract"
+
+          -- call run function
+          abs.run()
+
+	  -- check that the query function was called 
+	  assert.spy(_G.pg.query).was.called()
+          assert.spy(_G.ngx.say).was.called_with('from mocked db!')
+
+	  -- clear call history
+          _G.ngx.say:clear()
+          _G.ngx.exit:clear()
+              
+       end)
 end)
