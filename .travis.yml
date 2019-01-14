@@ -3,7 +3,6 @@ language: lua
 sudo: required
 
 env:
-  - LUA="lua=5.1"
   - LUA_PATH="./turbobee/?.lua"
 
 install:
