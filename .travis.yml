@@ -3,7 +3,7 @@ language: lua
 sudo: required
 
 env:
-  - LUA_PATH="home/turbobee/?.lua"
+  - LUA_PATH="$TRAVIS_BUILD_DIR/turbobee/?.lua"
 
 install:
   - sudo apt-get install luajit
