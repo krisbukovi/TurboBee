@@ -6,8 +6,8 @@ env:
   - LUA="lua=5.1"
 
 install:
-  - apt-get install luajit
-  - apt-get install luarocks
+  - sudo apt-get install luajit
+  - sudo apt-get install luarocks
   - luarocks make
   - luarocks install luafilesystem
   - luarocks install busted
