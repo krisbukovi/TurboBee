@@ -9,8 +9,7 @@ description = {
 }
 dependencies = {
     "lua >= 5.1, < 5.4",
-    "pgmoon == 1.9.0-1",
-    "luaunit == 3.3-1"
+    "pgmoon == 1.9.0-1"
 }
 build = {
     type = "builtin",
