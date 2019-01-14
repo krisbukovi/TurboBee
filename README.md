@@ -2,6 +2,9 @@
 
 OpenResty caching layer
 
+[![Build Status](https://travis-ci.org/adsabs/TurboBee.svg?branch=master)](https://travis-ci.org/adsabs/TurboBee)
+[![Coverage Status](https://coveralls.io/repos/github/adsabs/TurboBee/badge.svg?branch=master)](https://coveralls.io/github/adsabs/TurboBee?branch=master)
+
 Install turbobee and its dependencies into `/usr/local/openresty/luajit/lib/luarocks/rocks/`:
 
 ```
@@ -56,14 +59,9 @@ If it was installed in `dev.adsabs.harvard.edu`, try:
 
 
 ## Testing
-#### LuaUnit  
-
-```
-resty -I turbobee/  tests/test.lua
-```
-
 #### Busted
-
+Busted unit tests are currently configured with the `.travis.yml` file to run automatically when there are changes made to this repository, and can be triggered to run at any time from [travis-ci.org](travis-ci.org). Follow instructions below to run unit tests manually.
+  
 To run all _spec lua files in current and sub-directories:
 ```
 busted -v .
@@ -73,6 +71,12 @@ else for specific files:
 busted -v example_test_spec.lua
 ```
 
+#### LuaUnit (not currently in use)  
+
+```
+resty -I turbobee/  tests/test.lua
+```
+
 ## Misc
 
 How to reload nginx and all its lua modules:
@@ -80,3 +84,4 @@ How to reload nginx and all its lua modules:
 ```
 /usr/local/openresty/nginx/sbin/nginx -s reload
 ```
+
