@@ -4,7 +4,7 @@ sudo: required
 
 env:
   - LUA="lua=5.1"
-  - LUA_PATH=$LUA_PATH;/adsabs/Turbobee/turbobee/?.lua
+  - LUA_PATH="/adsabs/Turbobee/turbobee/?.lua"
 
 install:
   - sudo apt-get install luajit
