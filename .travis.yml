@@ -18,5 +18,5 @@ script:
  - "busted -v -c ."
 
 after_success:
- - luacov-coveralls
+ - luacov-coveralls -e $TRAVIS_BUILD_DIR/usr
 
