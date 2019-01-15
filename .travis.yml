@@ -18,5 +18,5 @@ script:
  - "busted -v -c ."
 
 after_success:
- - luacov-coveralls -e usr/ 
+ - luacov-coveralls -e usr/ -e tests/ 
 

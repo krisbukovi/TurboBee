@@ -15,8 +15,7 @@ build = {
     type = "builtin",
     modules = {
         ["turbobee.abs"] = "turbobee/abs.lua",
-        ["turbobee.search"] = "turbobee/search.lua",
-        ["tests.test"] = "tests/test.lua"
+        ["turbobee.search"] = "turbobee/search.lua"
     },
     copy_directories = {
         "tests"
