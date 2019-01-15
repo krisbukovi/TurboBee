@@ -3,18 +3,20 @@ language: lua
 sudo: required
 
 env:
-  - LUA_PATH="./turbobee/?.lua"
+  - LUA_PATH="$TRAVIS_BUILD_DIR/turbobee/?.lua"
 
 install:
   - sudo apt-get install luajit
   - sudo apt-get install luarocks
   - sudo luarocks install luafilesystem
   - sudo luarocks install busted
+  - sudo luarocks install luacov
+  - sudo luarocks install luacov-coveralls
 
 
 script:
- - "busted -v ."
+ - "busted -v -c ."
 
 after_success:
- - "coveralls"
+ - luacov-coveralls -e usr/ 
 
