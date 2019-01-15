@@ -141,6 +141,7 @@ describe("unit test -", function()
 
 	  -- check that the query function was called 
 	  assert.spy(_G.pg.query).was.called()
+	  assert.spy(_G.pg.escape_literal).was.called()
           assert.spy(_G.ngx.say).was.called_with('from mocked db!')
 
 	  -- clear call history
@@ -148,4 +149,65 @@ describe("unit test -", function()
           _G.ngx.exit:clear()
               
        end)
+       it('checks the return value for db connection failure', function()
+       
+           local err = "Connection failure."
+
+	   -- define a local pg object that fails to connect 
+           local pg_fail = {
+               connect = function(self) return false, err end,
+               query = function(self, s) return nil end,
+               escape_literal = function(self, s) return s end
+           }
+
+           -- mock pgmoon object that fails to connect to db
+           _G.pg = mock(pg_fail, false)
+
+	   -- run main function 
+	   abs.run()
+
+	   assert.spy(_G.pg.connect).was.called()
+	   assert.spy(_G.ngx.say).was.called_with("Could not connect to db: " .. err)
+	   assert.spy(_G.ngx.exit).was.called_with(503)
+
+       
+	   -- clear ngx function call history
+	   _G.ngx.say:clear()
+	   _G.ngx.exit:clear()
+       
+       end)
+       it('checks the return value when target is not found in db', function()
+       
+           -- define a local pg object whose query function returns nil 
+           local pg_notfound = {
+               connect = function(self) return true, nil end,
+               query = function(self, s) return nil end,
+               escape_literal = function(self, s) return s end
+           }
+
+           -- mock pgmoon object that fails to connect to db
+           _G.pg = mock(pg_notfound, false)
+
+	   -- run main function 
+	   abs.run()
+
+	   assert.spy(_G.pg.connect).was.called()
+	   assert.spy(_G.pg.query).was.called()
+           assert.spy(_G.ngx.redirect).was.called()
+	   assert.spy(_G.ngx.redirect).was.called_with("/#abs/" .. ngx.var.request_uri:sub(6) .. "?" .. ngx.var.QUERY_STRING)
+       
+           -- clear redirect function call history
+	   _G.ngx.redirect:clear()
+
+           -- set parameters equal to null
+           ngx.var.QUERY_STRING = nil
+
+	   -- run main function
+	   abs.run()
+
+	   assert.spy(_G.ngx.redirect).was.called_with("/#abs/" .. ngx.var.request_uri:sub(6))
+
+       end)
+
+
 end)
