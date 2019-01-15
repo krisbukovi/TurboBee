@@ -139,7 +139,8 @@ describe("unit test -", function()
           -- call run function
           abs.run()
 
-	  -- check that the query function was called 
+	  -- check that query and esacpe_literal functions called
+          -- and result from db is displayed 
 	  assert.spy(_G.pg.query).was.called()
 	  assert.spy(_G.pg.escape_literal).was.called()
           assert.spy(_G.ngx.say).was.called_with('from mocked db!')
@@ -166,6 +167,7 @@ describe("unit test -", function()
 	   -- run main function 
 	   abs.run()
 
+           -- check that connect was called, correct error message displayed and 503 returned 
 	   assert.spy(_G.pg.connect).was.called()
 	   assert.spy(_G.ngx.say).was.called_with("Could not connect to db: " .. err)
 	   assert.spy(_G.ngx.exit).was.called_with(503)
@@ -191,6 +193,8 @@ describe("unit test -", function()
 	   -- run main function 
 	   abs.run()
 
+           -- check that connect and query were called
+           -- and redirect was called with correct parameters 
 	   assert.spy(_G.pg.connect).was.called()
 	   assert.spy(_G.pg.query).was.called()
            assert.spy(_G.ngx.redirect).was.called()
@@ -205,6 +209,7 @@ describe("unit test -", function()
 	   -- run main function
 	   abs.run()
 
+           -- check that redirect was called with correct parameters
 	   assert.spy(_G.ngx.redirect).was.called_with("/#abs/" .. ngx.var.request_uri:sub(6))
 
        end)
