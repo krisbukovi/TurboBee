@@ -89,22 +89,15 @@ describe("unit test -", function()
         -- call run function
         abs.run()
 
-        assert.spy(_G.ngx.location.capture).was.called()
-        assert.spy(_G.ngx.location.capture).was.called_with("/proxy_abs/" .. ngx.var.request_uri:sub(6) .. "?" .. ngx.var.QUERY_STRING)
-
-        -- check that it exits
-        assert.spy(_G.ngx.exit).was.called()
-
-        -- checks exit code
-        assert.spy(_G.ngx.exit).was.called_with(404)
+        -- check that query and escape_literal functions called
+        -- and result from db is displayed
+        assert.spy(_G.pg.query).was.called()
+        assert.spy(_G.pg.escape_literal).was.called()
+        assert.spy(_G.ngx.say).was.called_with('from mocked db!')
 
         -- clear call history
         _G.ngx.say:clear()
         _G.ngx.exit:clear()
-        _G.pg.query:clear()
-
-        -- clear location.capture function call history
-        _G.ngx.location.capture:clear()
 
     end)
 
