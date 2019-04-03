@@ -24,11 +24,11 @@ function M.run()
     if success then
         local destination = ngx.var.request_uri:sub(6) -- Ignore '/abs/'
         local i, parts = split(destination, '/')
-        local bibcode = parts[1]
+        local bibcode = ngx.unescape_uri(parts[1])
         
 
-        if bibcode == nil or bibcode:len() ~= 19 or i < 1 then
-            ngx.status=404 -- Bibcode should be 19 characters
+        if bibcode == nil or i < 1 then
+            ngx.status=404
             ngx.say("Invalid URI.")
             ngx.exit(404)
         else 

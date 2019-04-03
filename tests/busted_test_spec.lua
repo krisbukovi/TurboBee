@@ -1,11 +1,11 @@
 describe("unit test -", function()
-  
+
     -- import functions from abs.lua and search.lua files
     local abs = require('abs')
     local search = require('search')
 
 
-    -- define ngx object 
+    -- define ngx object
     ngx = {
         say = function(s) print(s) end,
         print = function(s) print(s) end,
@@ -22,14 +22,15 @@ describe("unit test -", function()
         location = {
             capture = function(s) return { header = {}, status = 200, body = "<html></html>"} end
         },
-        exit = function(s) end
+        exit = function(s) end,
+        unescape_uri = function(s) return s end
     }
-    
+
     -- mock ngx object using busted function
     -- store in global var
     _G.ngx = mock(ngx, false)
-    
-    -- define pgmoon object 
+
+    -- define pgmoon object
     pg = {
         connect = function(self) return true, nil end,
         query = function(self, s) return { { content = 'from mocked db!'  } } end,
@@ -41,7 +42,7 @@ describe("unit test -", function()
     -- store in global var
     _G.pg = mock(pg, false)
 
-    
+
     it('checks that pgmoon connect to db function was called', function()
         -- store string bibcode var
         local bibcode = "2018EPJWC.18608001A"
@@ -61,18 +62,18 @@ describe("unit test -", function()
 
     it('checks the return value for url that is nil', function()
         -- set request equal to null
-        ngx.var.request_uri = "/abs//abstract"
+        ngx.var.request_uri = ""
 
-        -- call run function 
+        -- call run function
         abs.run()
 
-        -- check display 
+        -- check display
         assert.spy(_G.ngx.say).was.called_with("Invalid URI.")
 
         -- check that it exits
         assert.spy(_G.ngx.exit).was.called()
 
-        -- check exit code 
+        -- check exit code
         assert.spy(_G.ngx.exit).was.called_with(404)
 
         -- clear call history
@@ -81,37 +82,34 @@ describe("unit test -", function()
     end)
 
     it('checks the return value for url with a bibcode that is too long', function()
-        
+
         -- set request to a value with a bibcode that is too long
         ngx.var.request_uri = "/abs/2018EPJWC.18608001AB/abstract"
 
         -- call run function
         abs.run()
 
-        -- checks display
-        assert.spy(_G.ngx.say).was.called_with("Invalid URI.")
-
-        -- check that it exits
-        assert.spy(_G.ngx.exit).was.called()
-
-        -- checks exit code
-        assert.spy(_G.ngx.exit).was.called_with(404)
+        -- check that query and escape_literal functions called
+        -- and result from db is displayed
+        assert.spy(_G.pg.query).was.called()
+        assert.spy(_G.pg.escape_literal).was.called()
+        assert.spy(_G.ngx.say).was.called_with('from mocked db!')
 
         -- clear call history
         _G.ngx.say:clear()
         _G.ngx.exit:clear()
-        _G.pg.query:clear()
+
     end)
 
     it('checks the return value for url with a 19 character bibcode', function()
-        -- set request to a value with a bibcode that is too long
+        -- set request to a value with a bibcode that is 19 characters
         ngx.var.request_uri = "/abs/2018EPJWC.18608001A/abstract"
 
         -- call run function
         abs.run()
 
-        -- check that query and esacpe_literal functions called
-        -- and result from db is displayed 
+        -- check that query and escape_literal functions called
+        -- and result from db is displayed
         assert.spy(_G.pg.query).was.called()
         assert.spy(_G.pg.escape_literal).was.called()
         assert.spy(_G.ngx.say).was.called_with('from mocked db!')
@@ -124,7 +122,7 @@ describe("unit test -", function()
     it('checks the return value for db connection failure', function()
         local err = "Connection failure."
 
-        -- define a local pg object that fails to connect 
+        -- define a local pg object that fails to connect
         local pg_fail = {
             connect = function(self) return false, err end,
             query = function(self, s) return nil end,
@@ -134,10 +132,10 @@ describe("unit test -", function()
         -- mock pgmoon object that fails to connect to db
         _G.pg = mock(pg_fail, false)
 
-        -- run main function 
+        -- run main function
         abs.run()
 
-        -- check that connect was called, correct error message displayed and 503 returned 
+        -- check that connect was called, correct error message displayed and 503 returned
         assert.spy(_G.pg.connect).was.called()
         assert.spy(_G.ngx.say).was.called_with("Could not connect to the database.")
         assert.spy(_G.ngx.exit).was.called_with(503)
@@ -149,7 +147,7 @@ describe("unit test -", function()
 
     it('checks the return value when target is not found in db', function()
 
-        -- define a local pg object whose query function returns nil 
+        -- define a local pg object whose query function returns nil
         local pg_notfound = {
             connect = function(self) return true, nil end,
             query = function(self, s) return nil end,
@@ -159,17 +157,17 @@ describe("unit test -", function()
         -- mock pgmoon object that fails to connect to db
         _G.pg = mock(pg_notfound, false)
 
-        -- run main function 
+        -- run main function
         abs.run()
 
         -- check that connect and query were called
-        -- and location.capture was called with correct parameters 
+        -- and location.capture was called with correct parameters
         assert.spy(_G.pg.connect).was.called()
         assert.spy(_G.pg.query).was.called(2)
         assert.same(_G.pg.query.calls[2].refs[2], "INSERT into pages (qid, target) values (md5(random()::text || clock_timestamp()::text)::cstring, //ui.adsabs.harvard.edu/abs/2018EPJWC.18608001A)")
         assert.spy(_G.ngx.location.capture).was.called()
         assert.spy(_G.ngx.location.capture).was.called_with("/proxy_abs/" .. ngx.var.request_uri:sub(6) .. "?" .. ngx.var.QUERY_STRING)
-     
+
         -- clear location.capture function call history
         _G.ngx.location.capture:clear()
 
@@ -190,13 +188,13 @@ describe("unit test -", function()
         ngx.location.capture = function(s) return { header = {}, status = 200, body = "<html></html>"} end
         spy.on(_G.ngx.location, 'capture')
 
-        -- run main function 
+        -- run main function
         search.run()
 
         assert.spy(_G.ngx.location.capture).was.called()
         assert.spy(_G.ngx.location.capture).was.called_with("/proxy_search/" .. ngx.var.request_uri:sub(9))
-     
-        -- check that connect was called, correct error message displayed and 503 returned 
+
+        -- check that connect was called, correct error message displayed and 503 returned
         assert.spy(_G.ngx.print).was.called_with("<html></html>")
 
         -- clear ngx function call history
@@ -206,19 +204,19 @@ describe("unit test -", function()
         ngx.location.capture = function(s) return nil end
         spy.on(_G.ngx.location, 'capture')
 
-        -- run main function 
+        -- run main function
         search.run()
 
         assert.spy(_G.ngx.location.capture).was.called()
         assert.spy(_G.ngx.location.capture).was.called_with("/proxy_search/" .. ngx.var.request_uri:sub(9))
-     
-        -- check that connect was called, correct error message displayed and 503 returned 
+
+        -- check that connect was called, correct error message displayed and 503 returned
         assert.spy(_G.ngx.say).was.called_with("Could not proxy to the service.")
         --
         -- check that it exits
         assert.spy(_G.ngx.exit).was.called()
 
-        -- check exit code 
+        -- check exit code
         assert.spy(_G.ngx.exit).was.called_with(503)
 
         -- clear ngx function call history
@@ -229,7 +227,7 @@ describe("unit test -", function()
 
     it('checks various paths are caught', function()
 
-        
+
         _G.ngx.location.capture:clear()
         _G.pg.query:clear()
         ngx.var.request_uri = "/abs/2018EPJWC.18608001A/abstract"
@@ -250,8 +248,8 @@ describe("unit test -", function()
         assert.same(_G.pg.query.calls[2].refs[2], "INSERT into pages (qid, target) values (md5(random()::text || clock_timestamp()::text)::cstring, //ui.adsabs.harvard.edu/abs/2018EPJWC.18608001A)")
         assert.spy(_G.ngx.location.capture).was.called()
         assert.spy(_G.ngx.location.capture).was.called_with("/proxy_abs/" .. ngx.var.request_uri:sub(6))
-     
-        
+
+
         _G.ngx.location.capture:clear()
         _G.pg.query:clear()
         ngx.var.request_uri = "/abs/2018EPJWC.18608001A/metrics"
@@ -261,7 +259,7 @@ describe("unit test -", function()
         assert.spy(_G.ngx.location.capture).was.called()
         assert.spy(_G.ngx.location.capture).was.called_with("/proxy_abs/" .. ngx.var.request_uri:sub(6))
 
-        
+
 
 
     end)
