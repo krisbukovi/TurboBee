@@ -23,7 +23,7 @@ describe("unit test -", function()
             capture = function(s) return { header = {}, status = 200, body = "<html></html>"} end
         },
         exit = function(s) end,
-        unescape_uri = function(s) end
+        unescape_uri = function(s) return s end
     }
 
     -- mock ngx object using busted function
@@ -62,7 +62,7 @@ describe("unit test -", function()
 
     it('checks the return value for url that is nil', function()
         -- set request equal to null
-        ngx.var.request_uri = "/abs//abstract"
+        ngx.var.request_uri = ""
 
         -- call run function
         abs.run()
@@ -89,8 +89,8 @@ describe("unit test -", function()
         -- call run function
         abs.run()
 
-        -- checks display
-        assert.spy(_G.ngx.say).was.called_with("Invalid URI.")
+        assert.spy(_G.ngx.location.capture).was.called()
+        assert.spy(_G.ngx.location.capture).was.called_with("/proxy_abs/" .. ngx.var.request_uri:sub(6) .. "?" .. ngx.var.QUERY_STRING)
 
         -- check that it exits
         assert.spy(_G.ngx.exit).was.called()
@@ -102,6 +102,10 @@ describe("unit test -", function()
         _G.ngx.say:clear()
         _G.ngx.exit:clear()
         _G.pg.query:clear()
+
+        -- clear location.capture function call history
+        _G.ngx.location.capture:clear()
+
     end)
 
     it('checks the return value for url with a 19 character bibcode', function()
@@ -111,7 +115,7 @@ describe("unit test -", function()
         -- call run function
         abs.run()
 
-        -- check that query and esacpe_literal functions called
+        -- check that query and escape_literal functions called
         -- and result from db is displayed
         assert.spy(_G.pg.query).was.called()
         assert.spy(_G.pg.escape_literal).was.called()
