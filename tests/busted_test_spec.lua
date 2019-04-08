@@ -23,7 +23,8 @@ describe("unit test -", function()
             capture = function(s) return { header = {}, status = 200, body = "<html></html>"} end
         },
         exit = function(s) end,
-        unescape_uri = function(s) return s end
+        unescape_uri = function(s) return s end,
+        log = function(type, s) print(s) end
     }
 
     -- mock ngx object using busted function
