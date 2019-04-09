@@ -139,7 +139,7 @@ describe("unit test -", function()
 
         -- check that connect was called, correct error message displayed
         assert.spy(_G.pg.connect).was.called()
-        assert.spy(_G.ngx.log).was.called_with(_G.ngx.ERR, "Could not connect to the database.")
+        assert.spy(_G.ngx.log).was.called(_G.ngx.ERR, err)
 
         -- clear ngx function call history
         _G.ngx.say:clear()
