@@ -13,7 +13,8 @@ describe("unit test -", function()
             request_uri = "/abs/2018EPJWC.18608001A/abstract",
             QUERY_STRING = "?whoknows=True",
             scheme = "http",
-            host = "ui.adsabs.harvard.edu"
+            host = "ui.adsabs.harvard.edu",
+            ERR = "4"
         },
         header = {
             content_type = "html"
@@ -136,10 +137,9 @@ describe("unit test -", function()
         -- run main function
         abs.run()
 
-        -- check that connect was called, correct error message displayed and 503 returned
+        -- check that connect was called, correct error message displayed
         assert.spy(_G.pg.connect).was.called()
-        assert.spy(_G.ngx.say).was.called_with("Could not connect to the database.")
-        assert.spy(_G.ngx.exit).was.called_with(503)
+        assert.spy(_G.ngx.log).was.called_with(_G.ngx.ERR, "Could not connect to the database.")
 
         -- clear ngx function call history
         _G.ngx.say:clear()
