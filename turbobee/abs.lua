@@ -50,7 +50,7 @@ function M.run()
 
     _, success, err = pcall(pg['connect'], pg)
 
-    if success then
+    if success == true then
         local i, parts = split(destination, '/')
         local bibcode = ngx.unescape_uri(parts[1])
 
@@ -82,7 +82,8 @@ function M.run()
                 end
 
                 _, success, err = pcall(proxy_abs, destination, parameters)
-                if not success then
+                if success ~= true then
+                    err = err or success
                     ngx.status = 503
                     ngx.say(err)
                     return ngx.exit(503)
@@ -90,9 +91,15 @@ function M.run()
             end
         end
     else
-        ngx.log(ngx.ERR, "Could not connect to the database.")
+        if success == false then
+            ngx.log(ngx.ERR, "Could not connect to the database.")
+        else
+            err = err or success
+            ngx.log(ngx.ERR, err)
+        end
         _, success, err = pcall(proxy_abs, destination, parameters)
-        if not success then
+        if success ~= true then
+            err = err or success
             ngx.status = 503
             ngx.say(err)
             return ngx.exit(503)
