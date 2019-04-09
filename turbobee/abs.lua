@@ -91,12 +91,10 @@ function M.run()
             end
         end
     else
-        if success == false then
-            ngx.log(ngx.ERR, "Could not connect to the database.")
-        else
-            err = err or success
-            ngx.log(ngx.ERR, err)
-        end
+        -- logging for db connection failure and errors 
+        err = err or success
+        ngx.log(ngx.ERR, err)
+
         _, success, err = pcall(proxy_abs, destination, parameters)
         if success ~= true then
             err = err or success
