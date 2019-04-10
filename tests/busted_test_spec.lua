@@ -141,9 +141,34 @@ describe("unit test -", function()
         assert.spy(_G.pg.connect).was.called()
         assert.spy(_G.ngx.log).was.called(_G.ngx.ERR, err)
 
+        -- checks that location.capture was called with correct parameters
+        assert.spy(_G.ngx.location.capture).was.called()
+        assert.spy(_G.ngx.location.capture).was.called_with("/proxy_abs/" .. ngx.var.request_uri:sub(6) .. "?" .. ngx.var.QUERY_STRING)
+
         -- clear ngx function call history
         _G.ngx.say:clear()
         _G.ngx.exit:clear()
+
+        -- redefine function to test for nil return value from proxy
+        ngx.location.capture = function() return nil end
+        spy.on(_G.ngx.location, 'capture')
+
+        -- run main function
+        abs.run()
+
+        assert.spy(_G.ngx.location.capture).was.called()
+        assert.spy(_G.ngx.location.capture).was.called_with("/proxy_abs/" .. ngx.var.request_uri:sub(6) .. "?" .. ngx.var.QUERY_STRING)
+
+        -- check that connect was called, correct error message displayed and 503 returned
+        assert.spy(_G.ngx.say).was.called_with("Could not proxy to the service.")
+        --
+        -- check that it exits
+        assert.spy(_G.ngx.exit).was.called()
+
+        -- check exit code
+        assert.spy(_G.ngx.exit).was.called_with(503)
+
+
     end)
 
     it('checks the return value when target is not found in db', function()
