@@ -81,9 +81,8 @@ function M.run()
                     end
                 end
 
-                _, success, err = pcall(proxy_abs, destination, parameters)
+                success, err = proxy_abs(destination, parameters)
                 if success ~= true then
-                    err = err or success
                     ngx.status = 503
                     ngx.say(err)
                     return ngx.exit(503)
@@ -91,13 +90,12 @@ function M.run()
             end
         end
     else
-        -- logging for db connection failure and errors 
+        -- logging for db connection failure and errors
         err = err or success
         ngx.log(ngx.ERR, err)
 
-        _, success, err = pcall(proxy_abs, destination, parameters)
+        success, err = proxy_abs(destination, parameters)
         if success ~= true then
-            err = err or success
             ngx.status = 503
             ngx.say(err)
             return ngx.exit(503)
